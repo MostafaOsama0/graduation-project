@@ -35,3 +35,8 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 .idea/
+
+# Graphify local environment and cache files
+graphify-out/.graphify_*
+graphify-out/cache/
+
