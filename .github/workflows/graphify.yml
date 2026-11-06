@@ -1,0 +1,55 @@
+name: Update Knowledge Graph
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'graphify-out/**'
+      - '.github/workflows/graphify.yml'
+  workflow_dispatch: # Allows manual trigger from GitHub Actions UI
+
+permissions:
+  contents: write
+
+concurrency:
+  group: graphify-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  update-graph:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install graphify
+        run: |
+          python -m pip install --upgrade pip
+          pip install graphifyy
+
+      - name: Incremental Graph Update
+        run: |
+          graphify update .
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          if [ -n "$(git status --porcelain graphify-out/)" ]; then
+            echo "Changes detected in graphify-out/. Committing..."
+            git add graphify-out/
+            git commit -m "chore(graph): update architecture knowledge graph [skip ci]"
+            git push
+          else
+            echo "No graph updates needed."
+          fi
